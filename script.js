@@ -1,232 +1,203 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+const scanButton = document.getElementById('scanButton');
+const urlInput = document.getElementById('urlInput');
+const results = document.getElementById('results');
+const privacyScore = document.getElementById('privacyScore');
+const scoreLabel = document.getElementById('scoreLabel');
+const trackerSummary = document.getElementById('trackerSummary');
+const trackerList = document.getElementById('trackerList');
+const analysis = document.getElementById('analysis');
+const actions = document.getElementById('actions');
+const riskFill = document.getElementById('riskFill');
+const riskDesc = document.getElementById('riskDesc');
+
+scanButton.addEventListener('click', () => {
+    const url = urlInput.value.trim();
+    if (!url) {
+        alert('Please enter a URL.');
+        return;
+    }
+    scanButton.disabled = true;
+    scanButton.textContent = 'Scanning...';
+    setTimeout(() => {
+        runScan(url);
+        scanButton.disabled = false;
+        scanButton.textContent = 'Scan Now';
+    }, 1500);
+});
+
+function runScan(url) {
+    const hash = simpleHash(url);
+    const trackers = [
+        {
+            name: 'Google Analytics',
+            data: 'Page views, time spent, device info',
+            use: 'Analyzes your behavior to improve ads and site performance.',
+            risk: 5,
+            solution: 'Use browser extensions like Privacy Badger to block it.'
+        },
+        {
+            name: 'Facebook Pixel',
+            data: 'Clicks, page interactions, interests',
+            use: 'Targets you with ads across Facebook and Instagram.',
+            risk: 10,
+            solution: 'Disable third-party cookies in your browser settings.'
+        },
+        {
+            name: 'Twitter Ads',
+            data: 'Click patterns, social engagement',
+            use: 'Personalizes ads based on your Twitter activity.',
+            risk: 8,
+            solution: 'Log out of Twitter when browsing other sites.'
+        },
+        {
+            name: 'Amazon Affiliate',
+            data: 'Shopping habits, product views',
+            use: 'Tracks what you might buy to push affiliate sales.',
+            risk: 7,
+            solution: 'Clear cookies regularly or use incognito mode.'
+        },
+        {
+            name: 'Unknown Ad Network',
+            data: 'Location, IP address, browsing history',
+            use: 'Sells your data to unknown parties for profit.',
+            risk: 15,
+            solution: 'Use a VPN to mask your IP and location.'
+        },
+        {
+            name: 'DoubleClick',
+            data: 'Cross-site activity, ad interactions',
+            use: 'Builds a detailed profile for ad networks across the web.',
+            risk: 12,
+            solution: 'Install uBlock Origin to block its scripts.'
+        }
+    ];
+    const actionsList = [
+        'Switch to Brave browser—it blocks trackers automatically.',
+        'Enable "Do Not Track" in your browser settings.',
+        'Install uBlock Origin to stop trackers and ads.',
+        'Clear cookies weekly to erase tracking data.',
+        'Use a VPN like NordVPN to hide your location.',
+        'Try Mastodon instead of big social media platforms.',
+        'Use private browsing mode to limit tracking.',
+        'Block scripts via browser permissions.'
+    ];
+
+    const trackerCount = 1 + (hash % 5);
+    const selectedTrackers = trackers.slice(0, trackerCount);
+    const severityPenalty = selectedTrackers.reduce((sum, t) => sum + t.risk, 0);
+    const companiesInvolved = trackerCount * 2 - 1;
+    const dataPoints = trackerCount * 3;
+
+    const baseScore = 100;
+    const finalScore = Math.max(0, baseScore - (trackerCount * 10) - severityPenalty + (hash % 10 - 5));
+    const riskLevel = 100 - finalScore;
+
+    results.style.display = 'block';
+    privacyScore.textContent = finalScore;
+    privacyScore.style.background = getScoreGradient(finalScore);
+    scoreLabel.textContent = getScoreLabel(finalScore);
+
+    trackerSummary.innerHTML = `
+        <h2>Privacy Snapshot</h2>
+        <p><strong>Trackers Detected:</strong> ${trackerCount}</p>
+        <p><strong>Companies Involved:</strong> ${companiesInvolved}</p>
+        <p><strong>Data Points Collected:</strong> ~${dataPoints}</p>
+        <p><strong>Total Risk Factor:</strong> ${severityPenalty} (out of ${trackerCount * 15})</p>
+    `;
+
+    trackerList.innerHTML = '<h2>Tracker Breakdown</h2>';
+    selectedTrackers.forEach(tracker => {
+        trackerList.innerHTML += `
+            <div class="tracker-item">
+                <p><strong>${tracker.name}</strong></p>
+                <p class="data-type"><strong>Data Fetched:</strong> ${tracker.data}</p>
+                <p class="use-case"><strong>How They Use It:</strong> ${tracker.use}</p>
+                <p class="risk-score"><strong>Risk Score:</strong> ${tracker.risk}/15</p>
+                <p class="solution"><strong>How to Stop It:</strong> ${tracker.solution}</p>
+            </div>
+        `;
+    });
+
+    analysis.innerHTML = `
+        <h2>How This Hits You</h2>
+        <ol>
+            <li><strong>Data Grabbed:</strong> ${getDataAtRisk(trackerCount)}. It’s like a digital fingerprint.</li>
+            <li><strong>Who’s Watching:</strong> Up to <span class="highlight">${companiesInvolved}</span> companies could see this.</li>
+            <li><strong>Possible Damage:</strong> ${getConsequences(finalScore)} That’s the cost of exposure.</li>
+            <li><strong>Info Collected:</strong> Around <span class="highlight">${dataPoints}</span> pieces—enough to ${getExposureLevel(trackerCount)}.</li>
+            <li><strong>Your Risk:</strong> ${getRiskLabel(riskLevel)}. ${getUserImpact(riskLevel)}</li>
+        </ol>
+    `;
+
+    actions.innerHTML = `
+        <h2>Fight Back</h2>
+        <ol>
+            <li>${actionsList[hash % actionsList.length]}</li>
+            <li>${actionsList[(hash + 1) % actionsList.length]}</li>
+            <li>${actionsList[(hash + 2) % actionsList.length]}</li>
+        </ol>
+    `;
+
+    riskFill.style.width = `${riskLevel}%`;
+    riskFill.style.background = getRiskColor(riskLevel);
+    riskDesc.textContent = `Risk Level: ${getRiskLabel(riskLevel)} (${riskLevel}% Exposed)`;
 }
 
-body {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: #fff;
-    line-height: 1.6;
-    padding: 30px;
-    min-height: 100vh;
-    overflow-x: hidden;
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return Math.abs(hash);
 }
 
-.tool-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.98);
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-    position: relative;
-    overflow: hidden;
+function getScoreGradient(score) {
+    if (score >= 70) return 'linear-gradient(135deg, #27ae60, #2ecc71)';
+    if (score >= 40) return 'linear-gradient(135deg, #f1c40f, #f39c12)';
+    return 'linear-gradient(135deg, #e74c3c, #c0392b)';
 }
 
-h1 {
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-    margin-bottom: 15px;
-    background: linear-gradient(90deg, #16a085, #3498db);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: fadeIn 1s ease;
+function getScoreLabel(score) {
+    if (score >= 90) return 'Excellent';
+    if (score >= 70) return 'Good';
+    if (score >= 40) return 'Moderate';
+    if (score >= 20) return 'Poor';
+    return 'Critical';
 }
 
-.input-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    margin: 30px 0;
-    position: relative;
-    z-index: 1;
+function getRiskColor(risk) {
+    if (risk <= 30) return '#27ae60';
+    if (risk <= 60) return '#f1c40f';
+    return '#e74c3c';
 }
 
-#urlInput {
-    padding: 15px;
-    font-size: 1.2rem;
-    width: 100%;
-    max-width: 500px;
-    border: none;
-    border-radius: 30px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+function getRiskLabel(risk) {
+    if (risk <= 30) return 'Low';
+    if (risk <= 60) return 'Medium';
+    return 'High';
 }
 
-#urlInput:focus {
-    transform: scale(1.03);
-    box-shadow: 0 8px 20px rgba(22, 160, 133, 0.4);
-    outline: none;
+function getDataAtRisk(count) {
+    if (count <= 2) return 'basic stuff like what pages you visit';
+    if (count <= 4) return 'your browsing, location, and interests';
+    return 'a full profile of your online life';
 }
 
-#scanButton {
-    padding: 15px 40px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #16a085, #1abc9c);
-    color: #fff;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+function getConsequences(score) {
+    if (score >= 70) return 'A few extra ads—nothing too scary.';
+    if (score >= 40) return 'Personalized ads, maybe price hikes.';
+    return 'Big trouble—identity theft or data leaks.';
 }
 
-#scanButton:hover {
-    background: linear-gradient(135deg, #128c7e, #16a085);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(22, 160, 133, 0.5);
+function getUserImpact(risk) {
+    if (risk <= 30) return 'You’re mostly safe—no big worries.';
+    if (risk <= 60) return 'Ads will chase you, but it’s not the end.';
+    return 'Your privacy’s in danger—act now!';
 }
 
-.results {
-    display: none;
-    margin-top: 30px;
-    animation: slideUp 0.5s ease-in-out;
-}
-
-.score-container {
-    text-align: center;
-    margin-bottom: 30px;
-    position: relative;
-}
-
-.score-circle {
-    width: 120px;
-    height: 120px;
-    line-height: 120px;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #fff;
-    border-radius: 50%;
-    margin: 0 auto;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    transition: transform 0.5s ease, background 0.5s ease;
-}
-
-.score-circle:hover {
-    transform: scale(1.1);
-}
-
-.score-label {
-    margin-top: 15px;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #2c3e50;
-    text-transform: uppercase;
-}
-
-h2 {
-    font-size: 2rem;
-    color: #16a085;
-    margin: 25px 0 15px;
-    background: linear-gradient(90deg, #16a085, #3498db);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.summary, .analysis, .actions {
-    padding: 20px;
-    background: linear-gradient(135deg, #f9f9f9, #ecf0f1);
-    border-radius: 15px;
-    margin: 20px 0;
-    color: #333;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.tracker-list {
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 15px;
-    margin: 20px 0;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.tracker-item {
-    margin: 15px 0;
-    padding: 15px;
-    background: #f1f3f5;
-    border-radius: 10px;
-    color: #333;
-    transition: transform 0.3s ease;
-}
-
-.tracker-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.tracker-item strong {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-.tracker-item p {
-    margin: 5px 0;
-    font-size: 1rem;
-}
-
-.tracker-item .data-type { color: #2980b9; }
-.tracker-item .use-case { color: #8e44ad; }
-.tracker-item .risk-score { color: #e74c3c; }
-.tracker-item .solution { color: #16a085; }
-
-.risk-bar {
-    width: 100%;
-    height: 25px;
-    background: #ddd;
-    border-radius: 12px;
-    overflow: hidden;
-    margin: 15px 0;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.risk-fill {
-    height: 100%;
-    transition: width 0.7s ease;
-}
-
-#riskDesc {
-    font-size: 1rem;
-    color: #666;
-    text-align: center;
-}
-
-ol {
-    padding-left: 25px;
-    color: #333;
-    font-size: 1.1rem;
-}
-
-ol li {
-    margin: 10px 0;
-}
-
-.highlight {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 768px) {
-    .tool-container { padding: 25px; }
-    h1 { font-size: 2.2rem; }
-    .input-section { flex-direction: column; align-items: center; }
-    #urlInput, #scanButton { max-width: 100%; }
-    .score-circle { width: 100px; height: 100px; line-height: 100px; font-size: 2rem; }
-    h2 { font-size: 1.6rem; }
-    .tracker-item { padding: 10px; }
+function getExposureLevel(count) {
+    if (count <= 2) return 'know your basic habits';
+    if (count <= 4) return 'track your daily routine';
+    return 'predict your every move';
 }
