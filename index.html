@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowGuard - Reclaim Your Digital Soul</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">ShadowGuard</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#login">Login</a></li>
+                <li><a href="#signup" class="btn-signup">Get Started</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Reclaim Your <span>Digital Soul</span></h1>
+            <p>Protect your identity, erase your tracks, and outsmart trackers with ShadowGuard.</p>
+            <button class="btn-hero" onclick="startScan()">Scan My Digital Footprint</button>
+        </div>
+        <div class="hero-visual">
+            <div class="privacy-score">
+                <h3>Your Privacy Score</h3>
+                <div class="score-circle" id="scoreCircle">?</div>
+                <p id="scoreText">Run a scan to find out!</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <h2>Why ShadowGuard?</h2>
+        <div class="feature-cards">
+            <div class="card">
+                <h3>Digital Doppelgänger Scanner</h3>
+                <p>Find every trace of your data across the web—even the dark corners.</p>
+                <div class="card-visual" id="scannerVisual"></div>
+            </div>
+            <div class="card">
+                <h3>One-Click Data Eraser</h3>
+                <p>Wipe your info from creepy sites with a single tap.</p>
+                <button class="btn-card" onclick="eraseData()">Erase Now</button>
+            </div>
+            <div class="card">
+                <h3>Privacy Score Avatar</h3>
+                <p>Watch your avatar evolve as you secure your digital life.</p>
+                <img src="https://via.placeholder.com/100" alt="Avatar" id="avatarImg">
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 ShadowGuard. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
